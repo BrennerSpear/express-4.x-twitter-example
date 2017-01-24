@@ -1,7 +1,8 @@
 var express = require('express');
 var passport = require('passport');
 var Strategy = require('passport-twitter').Strategy;
-
+var db = require('./models');
+require('dotenv').config();
 
 // Configure the Twitter strategy for use by Passport.
 //
@@ -11,9 +12,9 @@ var Strategy = require('passport-twitter').Strategy;
 // with a user object, which will be set at `req.user` in route handlers after
 // authentication.
 passport.use(new Strategy({
-    consumerKey: process.env.CONSUMER_KEY,
-    consumerSecret: process.env.CONSUMER_SECRET,
-    callbackURL: 'http://127.0.0.1:3000/login/twitter/return'
+    consumerKey: process.env.TWITTER_KEY,
+    consumerSecret: process.env.TWITTER_SECRET,
+    callbackURL: 'https://adbdbbb6.ngrok.io/login/twitter/return'
   },
   function(token, tokenSecret, profile, cb) {
     // In this example, the user's Twitter profile is supplied as the user
@@ -46,9 +47,11 @@ passport.deserializeUser(function(obj, cb) {
 // Create a new Express application.
 var app = express();
 
+app.use(express.static(__dirname + '/public'));
+
 // Configure view engine to render EJS templates.
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+// app.set('views', __dirname + '/views');
+// app.set('view engine', 'ejs');
 
 // Use application-level middleware for common functionality, including
 // logging, parsing, and session handling.
@@ -79,8 +82,19 @@ app.get('/login/twitter',
 
 app.get('/login/twitter/return', 
   passport.authenticate('twitter', { failureRedirect: '/login' }),
-  function(req, res) {
-    res.redirect('/');
+  function(req, res)  {
+    var userData = JSON.parse(req.user._raw);
+
+    // var newUser = new db.User();
+    // newUser.twitterProfile = userData;
+    // newUser.save(function(err, user) {
+    //   req.login(user, function(err) {
+    //   if (err) {
+    //     return err;
+    //   }
+    //   res.redirect('/#/loggedin');
+    //   });
+    // });
   });
 
 app.get('/profile',
@@ -89,4 +103,4 @@ app.get('/profile',
     res.render('profile', { user: req.user });
   });
 
-app.listen(3000);
+app.listen(8080);
